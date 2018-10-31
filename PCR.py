@@ -1,8 +1,6 @@
 import numpy as np
 import numpy.linalg as n
 import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
 
 # Abre el documento WDBC.dat.
 archivo = open('WDBC.dat','r')
