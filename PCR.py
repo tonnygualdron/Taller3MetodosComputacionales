@@ -87,14 +87,52 @@ pval=np.zeros([len(autval)])
 #convierte cada auto valor en un porcentaje
 for i in range(len(autval)):
     pval[i]=(autval[i]/sumaTotal)*100
-#retorna el numero de variables 
+#retorna el numero de variables que generan un 50% en porcentaje minimo 2
+suma=0
+n=0
+for i in range(len(autval)):
+    if(suma<=50):
+        suma = suma + pval[i]
+    if(suma>=50 and n<2):
+        n=2
+        i=len(autval)
+    if(suma>=50 and n>=2):
+        i=len(autval)
+#Retorna la diagonal de la matriz de covarianza
+dia=[]
+for i in range(np.shape(cov)[0]):
+    dia.append(cov[i][i])
+#busca en la matriz de covariza es las cordenadas correspondiente a estas 2 autovalores
+dia2=dia
+m1=0
+m2=0   
+i1=0
+i2=0
+for i in range(len(dia2)):
+    if(dia2[i]>m1):
+        m1=dia2[i]
+        i1=i
+dia2.pop(i1)
+for i in range(len(dia2)):
+    if(dia2[i]>m2):
+        m2=dia2[i]
+        i2=i
+#correcion de ser necesaria por el borrado
+if(i2<=i1):
+   i2=i2+1
 
-x=datosNon[:,0]
-y=datosNon[:,1]
+#Los indices con respeccto a la matriz de datos originales debe sumarsele 2
+
+i1=i1+2
+i2=i2+2
+
+print("Los valores que mejor representa al sistema son un numero de ", n,"corresponde a los indices ", i1, " y ", i2, " de la matrix de datos")
+
+#matrix de los dos primeros vectores
 vec=np.array([autvec[0],autvec[1]])
-
+#nuevos datos proyectados en los vectores propios 
 nueva=np.dot(datosNon,np.transpose(vec))
-
+#grafica discriminando en B y M
 x=nueva[:,0]
 y=nueva[:,1]
 z=datos1
@@ -111,14 +149,12 @@ for i in range(len(x)):
         x0.append(x[i])
         y0.append(y[i])  
 
-plt.scatter(x0,y0,label='B',alpha=0.3)
-plt.scatter(x1,y1,label='M',alpha=0.3)
-plt.show()
+plt.scatter(x0,y0,label='B',alpha=0.5)
+plt.scatter(x1,y1,label='M',alpha=0.5)
+plt.legend()
+plt.xlabel("PC1")
+plt.ylabel("PC2")
+plt.title("PCA de los Datos")
+plt.savefig("GualdronTonny_PCA.pdf")
 
-
-
-
-
-
-
-
+print("Aunque la zona de intersección entre paciente con cancer maligno y benigno es reducida no estan totalmente aislado, asi que seria util como una primera instancia para determinar la posibilidad de que sea maligno y benigno; es decir como una prueba rapida como ya se hace con enefermedades como VIH donde existen pruebas de primera instancia y luego ya con estudios mas profundo se termina el diagnostico.")
