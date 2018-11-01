@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import cmath as cp
+from scipy import fftpack as f
+from scipy.interpolate import interp1d
 
 #utilizare lineas de codigo de PCR.py para leer el archivo
 # Abre el documento signal.dat
@@ -47,33 +48,96 @@ for i in range(tamano2):
 inco=np.asarray(datos2)
 inco=inco.astype(np.float)
 
-archivo.close()
+archivo2.close()
 
-#plt.plot(signal[:,0],signal[:,1])
-#plt.xlabel("Tiempo [s]")
-#plt.ylabel("Voltaje [V]") 
-#plt.title("Signal")
-#plt.savefig("GualdronTonny_signal.pdf")
+plt.plot(signal[:,0],signal[:,1])
+plt.xlabel("Tiempo [s]")
+plt.ylabel("Voltaje [V]") 
+plt.title("Signal")
+plt.savefig("GualdronTonny_signal.pdf")
+plt.close()
+def TDF(signal):
+    N = np.shape(signal)[0]
+    lista = np.ones((N)).astype(complex)
+    for m in range(N):
+        R = 0.0
+        for n in range(N):
+            R += signal[n][1] * np.exp(- 2j * np.pi * m * n / N)
+        lista[m]=R
+    return lista
 
-def TransDisFourier(signal,k):
-    n = np.shape(signal)[0] # numero de puntos igual
-    x=signal[:,1]
-    t=signal[:,0]
-    dt=signal[1][0]
-    R=0
-    R=x*(np.exp(((-2j*np.pi*t*k)/(n))))
-    Re=[]
-    te=[]
-    for i in range(len(R)):
-        ac=(R[i].real**2 + R[i].imag**2)**0.5
-        Re.append(ac)
-    for i in range(len(t)):
-        ac=i/dt
-        te.append(ac)
-    return (te,Re)
+def TDF2(signal):
+    N = np.shape(signal)[0]
+    lista = np.ones((N)).astype(complex)
+    for m in range(N):
+        R = 0.0
+        for n in range(N):
+            R += signal[n] * np.exp(- 2j * np.pi * m * n / N)
+        lista[m]=R
+    return lista
+
+trans=TDF(signal)
+x=f.fftfreq(np.shape(signal)[0],signal[1][0])
+y=trans
+plt.vlines(x,0,y.imag)
+plt.xlabel("Frecuencia [Hz]")
+plt.ylabel("Amplitud") 
+plt.title("Signal TF")
+plt.savefig("GualdronTonny_TF.pdf")
+plt.close()
+
+y2=abs(y)
+ii=[]
+ia=0
+m=0
+for z in range(3):
+    for i in range(len(x)):
+        if(y2[i] > m):
+            m=y2[i]
+            ia=i
+    ii.append(ia)
+    y2[ia]=0
+    ia=0
+    m=0
+
+print("Las frecuencias del sistema corresponde a ", x[ii[0]], " ,",x[ii[1]]," y ", x[ii[2]])
+
+print("Los datos incompletos no se pueden interpolar debido a que estos no estas igualmente espaciados por lo cual una transformada discreta seria ilogico")
+
+#Codigo reciclado de la tarea 2
+f2 = interp1d(inco[:,0], inco[:,1], kind='quadratic')
+f3 = interp1d(inco[:,0], inco[:,1], kind='cubic')
+
+xx = np.linspace(min(inco[:,0]),max(inco[:,0]),512)
+
+yq=TDF2(f2(xx))
+yc=TDF2(f3(xx))
+dt=(max(inco[:,0])-min(inco[:,0]))/512
+xxx=f.fftfreq(512,dt)
 
 
-trans=TransDisFourier(signal,1)
-plt.plot(trans[0],trans[1])
-plt.show()
+plt.figure()
+
+plt.subplot(3,1,1)
+plt.vlines(x,0,y.imag)
+plt.xlabel("Frecuencia [Hz]")
+plt.ylabel("Amplitud") 
+plt.title("Signal TF")
+
+plt.subplot(3,1,2)
+plt.vlines(xxx,0,yq.imag)
+plt.xlabel("Frecuencia [Hz]")
+plt.ylabel("Amplitud") 
+plt.title("Cuadratica")
+	
+plt.subplot(3,1,3)
+plt.vlines(xxx,0,yc.imag)
+plt.xlabel("Frecuencia [Hz]")
+plt.ylabel("Amplitud") 
+plt.title("Cubica")
+	
+plt.savefig("GualdronTonny_TF_interpola.pdf")
+plt.close()
+
+print("Las señales interpoladas presentan mas picos de amplitud considerables que la original, es decir hay un numero mayor de frecuencias que describen al sistema, la TF no estan limpia como la original. Esto puede ser resultado de que se propaga el error en el metodo de aproximación de la interpolación.")
 
