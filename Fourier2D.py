@@ -1,14 +1,34 @@
 import numpy as np
-from matplotlib import pyplot as plt
-import cv2
+import matplotlib.pyplot as plt
+import matplotlib.colors as pltc
+from scipy import fftpack as f
+#abre la imagen la convierte en una matrix de flotantes
+Arboles = plt.imread('Arboles.png').astype(float)
 
+ArbolesFFT = f.fft2(Arboles)
+ArbolesFFTNorma= np.abs(ArbolesFFT)
+minA= np.amin(np.abs(ArbolesFFT))
+maxA= np.amax(np.abs(ArbolesFFT))
+plt.imshow(ArbolesFFTNorma, norm=pltc.LogNorm(vmin=minA,vmax=maxA))
+plt.colorbar()
+plt.show()
 
-img = cv2.imread('Arboles.png',0)
-f = np.fft.fft2(img)
-fshift = np.fft.fftshift(f)
-magnitudFFT = 20*np.log(np.abs(fshift))
-plt.subplot(121),plt.imshow(img, cmap = 'gray')
-plt.title('Imagen de entrada'), plt.xticks([]), plt.yticks([])
-plt.subplot(122),plt.imshow(magnitudFFT, cmap = 'gray')
-plt.title('FFT'), plt.xticks([]), plt.yticks([])
+k=0.1
+CopiaArboles=ArbolesFFT.copy()
+l=np.shape(CopiaArboles)[0]
+c=np.shape(CopiaArboles)[1]
+
+CopiaArboles[int(l*k):int(l*(1-k))]=1
+CopiaArboles[:,int(c*k):int(c*(1-k))]=1
+
+ArbolesFFTNorma2= np.abs(CopiaArboles)
+plt.imshow(ArbolesFFTNorma2, norm=pltc.LogNorm(vmin=minA,vmax=maxA))
+plt.colorbar()
+plt.show()
+
+ArbolesFil = f.ifft2(CopiaArboles).real
+
+plt.figure()
+plt.imshow(ArbolesFil, plt.cm.gray)
+plt.title('Reconstructed Image')
 plt.show()
